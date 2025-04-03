@@ -2,9 +2,8 @@ version: "3"
 
 services:
   sonarqube:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: mc1arke/sonarqube-with-community-branch-plugin
+    container_name: sonarqube-mod
     ports:
       - "9000:9000"
     depends_on:
@@ -13,13 +12,24 @@ services:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+      SONAR_JAVA_OPTS: "-Xmx1g -Xms512m -XX:+HeapDumpOnOutOfMemoryError"
+    deploy:
+      resources:
+        limits:
+          memory: 1g  
+        reservations:
+          memory: 512m
+    mem_limit: 1g
+    memswap_limit: 4g 
     volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - ./sq-logs:/opt/sonarqube/logs
+      - sonarqube_data:/opt/sonarqube-mod/data
+      - sonarqube_extensions:/opt/sonarqube-mod/extensions
+      - ./sq-logs:/opt/sonarqube-mod/logs
 
   db:
-    image: postgres
+    image: postgres:17 
+    container_name: sonarqube_db
+    restart: always
     ports:
       - "5433:5432"
     environment:
@@ -27,11 +37,9 @@ services:
       POSTGRES_PASSWORD: sonar
       POSTGRES_DB: sonar
     volumes:
-      - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
 
 volumes:
   sonarqube_data:
   sonarqube_extensions:
-  postgresql:
   postgresql_data:
